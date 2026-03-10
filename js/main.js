@@ -19,7 +19,6 @@
       if (idx >= BG_CANDIDATES.length) return;
       const img = new Image();
       img.onload = () => {
-        document.getElementById('room').style.display = 'none';
         document.body.style.backgroundImage    = `url('${BG_CANDIDATES[idx]}')`;
         document.body.style.backgroundSize     = 'contain';
         document.body.style.backgroundPosition = 'center';

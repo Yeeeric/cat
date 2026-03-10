@@ -1,0 +1,16 @@
+DROP YOUR BACKGROUND IMAGE IN HERE
+====================================
+
+Place any image file in this folder with one of these names:
+
+  background.jpg
+  background.jpeg
+  background.png
+  background.webp
+  background.gif
+
+The app will automatically use it as the room background.
+If no image is found, a built-in cozy CSS room scene is shown instead.
+
+Recommended: a cozy interior scene (living room, bedroom, cafe, etc.)
+Any resolution works — the image will be scaled to fill the window.

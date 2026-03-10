@@ -21,9 +21,10 @@
       img.onload = () => {
         document.getElementById('room').style.display = 'none';
         document.body.style.backgroundImage    = `url('${BG_CANDIDATES[idx]}')`;
-        document.body.style.backgroundSize     = 'cover';
+        document.body.style.backgroundSize     = 'contain';
         document.body.style.backgroundPosition = 'center';
         document.body.style.backgroundRepeat   = 'no-repeat';
+        document.body.style.backgroundColor    = '#8b6f62';
       };
       img.onerror = () => { idx++; tryNext(); };
       img.src = BG_CANDIDATES[idx];
@@ -78,9 +79,6 @@
         Effects.spawnBubble(cat.x, cat.y - 100);
       }
     });
-
-    // ── Ambient effects ────────────────────────────────────────
-    Effects.spawnDustMotes();
 
     let bubbleTick = 0;
     const BUBBLE_INTERVAL = 400; // frames

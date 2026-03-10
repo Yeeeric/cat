@@ -9,8 +9,8 @@ window.Effects = (() => {
   const layer = document.getElementById('effects-layer');
 
   const sayings = [
-    'Purrr...', '*chirp*', 'Mrrrow~', '*bap bap bap*',
-    'nya?', '*slow blink*', 'mew.', '*kneads*', '*stares*', 'prrrp'
+    'Purrr...', 'Miau~', 'Mrrrow~', '*bap bap bap*',
+    'nya?', '*slow blink*', 'mew.', 'miw', '*stares*'
   ];
 
   let lastBubble = 0;
@@ -33,29 +33,6 @@ window.Effects = (() => {
     setTimeout(() => el.remove(), 2600);
   }
 
-  // ── Dust Motes ────────────────────────────────────────────────
-  function spawnDustMotes() {
-    for (let i = 0; i < 12; i++) {
-      setTimeout(() => _addDust(), i * 600 + Math.random() * 400);
-    }
-    setInterval(() => _addDust(), 2200 + Math.random() * 1800);
-  }
-
-  function _addDust() {
-    const el = document.createElement('div');
-    el.className = 'dust-mote';
-    const size = 2 + Math.random() * 3;
-    el.style.width  = size + 'px';
-    el.style.height = size + 'px';
-    el.style.left   = (Math.random() * 100) + 'vw';
-    el.style.top    = (40 + Math.random() * 40) + 'vh';
-    const dur = 6 + Math.random() * 8;
-    el.style.animationDuration = dur + 's';
-    el.style.animationDelay    = (Math.random() * 3) + 's';
-    layer.appendChild(el);
-    setTimeout(() => el.remove(), (dur + 3) * 1000);
-  }
-
   // ── Idle trigger ──────────────────────────────────────────────
   function tryBubble(catX, catY, catState) {
     if (catState === 'sit' || catState === 'idle') {
@@ -63,5 +40,5 @@ window.Effects = (() => {
     }
   }
 
-  return { spawnBubble, spawnDustMotes, tryBubble };
+  return { spawnBubble, tryBubble };
 })();

@@ -20,10 +20,9 @@ window.CatPhysics = (() => {
 
   function lerp(a, b, t) { return a + (b - a) * t; }
 
-  // Idle animations to cycle through (excluding sleep — that's separate)
   const IDLE_CYCLE = ['idle', 'look-side', 'lick-paw', 'lick-paw-b', 'paw-wag', 'arch-back'];
-  const FRAMES_BEFORE_SLEEP = 600;  // ~10 seconds at 60fps before sleep kicks in
-  const FRAMES_BEFORE_IDLE_CYCLE = 120; // ~2 seconds before cycling away from plain idle
+  const FRAMES_BEFORE_SLEEP = 600;
+  const FRAMES_BEFORE_IDLE_CYCLE = 120;
 
   function create(startX, startY) {
     return {
@@ -36,29 +35,24 @@ window.CatPhysics = (() => {
       animFrame: 0,
       animTimer: 0,
 
-      facing: -1,   // -1=left (sheet native), 1=right
+      facing: -1,
 
       scaleX: 1,
       scaleY: 1,
 
-      // How long the cat has been still (in frames)
       stillTimer: 0,
-
-      // Which step of the idle cycle we're on
       idleCycleIndex: 0,
-      // Timer within the current idle anim before advancing to next
       idleAnimTimer: 0,
 
-      // One-shot lock
       lockedAnim: null,
       lockTimer: 0,
 
-      // Turn squish
       isTurning: false,
       turnProgress: 0,
 
       speed: 0,
       wasMoving: false,
+      pounceTimer: 0,
     };
   }
 
@@ -69,7 +63,7 @@ window.CatPhysics = (() => {
     const dy   = cat.targetY - cat.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-    // ── One-shot lock ─────────────────────────────────────────────
+    // ── One-shot lock (paw-wag only) ──────────────────────────────
     if (cat.lockedAnim) {
       cat.lockTimer -= dt;
       _advanceFrame(cat, dtSec);
@@ -137,25 +131,27 @@ window.CatPhysics = (() => {
 
     // ── Animation state machine ───────────────────────────────────
     if (moving) {
-      // Reset all idle state while moving so the cat always snaps
-      // back to plain 'idle' the moment it stops — no mid-cycle surprises
       cat.stillTimer     = 0;
       cat.idleCycleIndex = 0;
       cat.idleAnimTimer  = 0;
       cat.wasMoving      = true;
 
-      const targetAnim = cat.speed > 4 ? 'run' : 'walk';
-      if (cat.animName !== targetAnim) {
-        cat.animName  = targetAnim;
-        cat.animFrame = 0;
-        cat.animTimer = 0;
+      // Tick down pounce — don't reassign anim until it finishes
+      if (cat.pounceTimer > 0) {
+        cat.pounceTimer -= dt;
+      } else {
+        const targetAnim = cat.speed > 4 ? 'run' : 'walk';
+        if (cat.animName !== targetAnim) {
+          cat.animName  = targetAnim;
+          cat.animFrame = 0;
+          cat.animTimer = 0;
+        }
       }
     } else {
-      // Cat is still
+      cat.pounceTimer = 0;
       cat.stillTimer += dt;
 
       if (cat.wasMoving) {
-        // Just stopped — snap immediately to plain idle
         cat.wasMoving = false;
         _enterIdle(cat);
       } else {
@@ -179,13 +175,11 @@ window.CatPhysics = (() => {
   }
 
   function _updateIdleCycle(cat, dt) {
-    // Before idle cycle starts: just play plain idle
     if (cat.stillTimer < FRAMES_BEFORE_IDLE_CYCLE) {
       if (cat.animName !== 'idle') _enterIdle(cat);
       return;
     }
 
-    // Sleep only kicks in after very long stillness
     if (cat.stillTimer > FRAMES_BEFORE_SLEEP) {
       if (cat.animName !== 'sleep') {
         cat.animName  = 'sleep';
@@ -195,14 +189,11 @@ window.CatPhysics = (() => {
       return;
     }
 
-    // Cycle through idle variety anims
     cat.idleAnimTimer += dt;
 
-    // Duration for current idle anim before moving to next (in frames)
     const currentAnim    = IDLE_CYCLE[cat.idleCycleIndex];
     const framesPerCycle = CatSprite.getFrameCount(currentAnim) / CatSprite.getFPS(currentAnim) * 60;
-    // Play each anim 2–3 full loops before switching
-    const holdFrames = framesPerCycle * (2 + Math.floor(cat.idleCycleIndex % 2));
+    const holdFrames     = framesPerCycle * (2 + Math.floor(cat.idleCycleIndex % 2));
 
     if (cat.idleAnimTimer >= holdFrames) {
       cat.idleAnimTimer  = 0;
@@ -238,7 +229,6 @@ window.CatPhysics = (() => {
     cat.y = Math.max(PAD, Math.min(window.innerHeight - PAD, cat.y));
   }
 
-  // ── One-shot triggers ─────────────────────────────────────────
   function triggerPawWag(cat) {
     if (cat.lockedAnim) return;
     cat.lockedAnim = 'paw-wag';
@@ -249,13 +239,10 @@ window.CatPhysics = (() => {
   }
 
   function triggerPounce(cat) {
-    if (cat.lockedAnim) return;
-    cat.lockedAnim = 'pounce';
-    cat.animName   = 'pounce';
-    cat.animFrame  = 0;
-    cat.animTimer  = 0;
-    cat.lockTimer  = (CatSprite.getFrameCount('pounce') / CatSprite.getFPS('pounce')) * 60;
-    cat.vy -= 3;
+    cat.animName    = 'pounce';
+    cat.animFrame   = 0;
+    cat.animTimer   = 0;
+    cat.pounceTimer = (CatSprite.getFrameCount('pounce') / CatSprite.getFPS('pounce')) * 60;
   }
 
   return { create, update, triggerPawWag, triggerPounce };
